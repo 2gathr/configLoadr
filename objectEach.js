@@ -1,6 +1,8 @@
 function objectEach(object, iterator, next) {
 	var length = Object.keys(object).length,
-		callbacks = object;
+		completed = 0,
+		root,
+		execute = true;
 	if(typeof next == 'undefined') {
 		next = function() {};
 	}
@@ -8,17 +10,29 @@ function objectEach(object, iterator, next) {
 		return next();
 	}
 	for(var key in object) {
-		iterator(key, object[key], done);
+		iterator(key, object[key], onlyOnce(done));
+	}
+	function onlyOnce(fn) {
+        var called = false;
+        return function() {
+            if (called) {
+				throw new Error('callback was already called');
+			}
+            called = true;
+            fn.apply(root, arguments);
+        };
 	}
 	function done(error) {
 		if(error) {
+			next(error);
 			next = function() {};
-			return next(error);
+			return;
 		}
 		completed++;
 		if(completed >= length) {
 			next();
 		}
+		var called = true;
 	}
 }
 
