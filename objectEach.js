@@ -36,4 +36,10 @@ function objectEach(object, iterator, next) {
 	}
 }
 
+function objectForEach(object, iterator) {
+	Object.keys(object).forEach(function(key) {
+		iterator(key, object[key]);
+	});
+}
+
 module.exports = objectEach;
