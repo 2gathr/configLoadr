@@ -36,7 +36,7 @@ function objectEach(object, iterator, next) {
 	}
 }
 
-function objectForEach(object, iterator) {
+function objectEachSync(object, iterator) {
 	Object.keys(object).forEach(function(key) {
 		iterator(key, object[key]);
 	});
