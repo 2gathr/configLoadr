@@ -1,4 +1,6 @@
-function objectEach(object, iterator, next) {
+aObject = {};
+
+aObject.each = function(object, iterator, next) {
 	var length = Object.keys(object).length,
 		completed = 0,
 		root,
@@ -34,12 +36,12 @@ function objectEach(object, iterator, next) {
 		}
 		var called = true;
 	}
-}
+};
 
-function objectEachSync(object, iterator) {
+aObject.eachSync = function(object, iterator) {
 	Object.keys(object).forEach(function(key) {
 		iterator(key, object[key]);
 	});
-}
+};
 
-module.exports = objectEach;
+module.exports = aObject;
