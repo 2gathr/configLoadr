@@ -13,88 +13,57 @@ var defaultOptions = {
 };
 
 function ConfigLoadr(load, options_next, next) {
-	var thisCL = this;
-	if (typeof options_next == 'function') {
-		next = options_next;
-		this.options = defaultOptions;
-	} else if (typeof options_next == 'object') {
-		this.options = options_next;
+	var sortedArguments = sortArguments(options_next, next);
+	this.options = sortedArguments.options;
+	next = sortedArguments.callback;
+	this.globalConfig = {};
+	this.configNamespaces = {};
+	loadConfig(load, {global: this.globalConfig, namespaces: this.configNamespaces}, this.options);
+}
+
+function sortArguments(options_callback, callback) {
+	if (typeof options_callback == 'function') {
+		callback = options_callback;
+		options = defaultOptions;
+	} else if (typeof options_callback == 'object') {
+		options = options_callback;
 		aObject.eachSync(defaultOptions, function(key, value) {
-			if(typeof thisCL.options[key] == 'undefined') {
-				thisCL.options[key] = value;
+			if(typeof options[key] == 'undefined') {
+				options[key] = value;
 			}
 		});
 	} else {
 		throw new Error('unsupported type of options / next: ' + typeof options_next);
 	}
-	this.globalConfig = {};
-	this.configNamespaces = {};
+	return {
+		options: options,
+		callback: callback
+	};
+}
+
+function loadConfig(load, config, options) {
 	if(typeof load == 'string') {
 		load = [load];
 	}
 	if(typeof load == 'object') {
 		async.each(load,
 			function(file, nextFile) {
-				var noFileFound = true,
-					configFile = {};
-				async.each(thisCL.options.environments,
-					function(environment, nextEnvironment) {
-						if(environment == ConfigLoadr.defaultEnvironment) {
-							environment = 'default';
-						}
-						var environmentFile = thisCL.options.configDirectory + '/';
-						switch(thisCL.options.environmentStoreType) {
-							case 'extension':
-								environmentFile += file + '.' + environment;
-								break;
-							case 'file':
-								environmentFile += file + '/' + environment;
-								break;
-							case 'directory':
-								environmentFile += environment + '/' + file;
-								break;
-							case 'object':
-								environmentFile += file;
-								break;
-							default:
-								throw new Error('unknown environmentStoreType: ' + options.environmentStoreType);
-						}
-						fs.readFile(environmentFile + '.json', {encoding: 'utf8'}, function(error, data) {
-							if (error) {
-								return nextEnvironment();
-							}
-							var configEnvironment = JSON.parse(data);
-							if(thisCL.options.environmentStoreType == 'object') {
-								configEnvironment = configEnvironment[environment];
-								if (typeof configEnvironment == 'undefined') {
-									return nextEnvironment();
-								}
-							}
-							updateConfig(configEnvironment, configFile);
-							noFileFound = false;
-							nextEnvironment();
-						});
-					},
-					function(error) {
-						if(noFileFound) {
-							throw new Error('no environment files found for file: ' + file);
-						}
-						if(thisCL.options.namespace == ConfigLoadr.globalNamespace) {
-							updateConfig(configFile, thisCL.globalConfig);
-						} else {
-							if(typeof thisCL.configNamespaces[thisCL.options.namespace] == 'undefined') {
-								thisCL.configNamespaces[thisCL.options.namespace] = {};
-							}
-							updateConfig(configFile, thisCL.configNamespaces[thisCL.options.namespace]);
-						}
-						nextFile();
-					}
-				);
+				getConfigFile(file, options, function(configFile) {
+					updateConfig(
+						{
+							global: config.global,
+							namespaces: config.namespaces
+						},
+						configFile,
+						options.namespace
+					);
+					nextFile();
+				});
 			},
 			function(error) {
 				next(null, {
-					global: thisCL.globalConfig,
-					namespaces: thisCL.configNamespaces
+					global: config.global,
+					namespaces: config.namespaces
 				});
 			}
 		);
@@ -103,15 +72,85 @@ function ConfigLoadr(load, options_next, next) {
 	}
 }
 
-function updateConfig(newConfig, currentConfig) {
-	Object.keys(newConfig).forEach(function(key) {
-		if(typeof newConfig[key] == 'object') {
-			if(typeof currentConfig[key] == 'undefined') {
-				currentConfig[key] = {};
-			}
-			return updateConfig(newConfig[key], currentConfig[key]);
+function updateConfig(currentConfig, newConfig, namespace) {
+	if(namespace == ConfigLoadr.globalNamespace) {
+		updateObject(currentConfig.global, newConfig);
+	} else {
+		if(typeof currentConfig.namespaces[namespace] == 'undefined') {
+			currentConfig.namespaces[namespace] = {};
 		}
-		currentConfig[key] = newConfig[key];
+		updateConfig(currentConfig.namespaces[namespace], newConfig);
+	}
+}
+
+function getConfigFile(file, options, next) {
+	var noFileFound = true,
+		config = {};
+	async.each(options.environments,
+		function(environment, nextEnvironment) {
+			getConfig(file, environment, options, function(error, configEnvironment) {
+				if(error) {
+					return nextEnvironment();
+				}
+				noFileFound = false;
+				updateObject(config, configEnvironment);
+				nextEnvironment();
+			});
+		},
+		function(error) {
+			if(noFileFound) {
+				throw new Error('no environment files found for file: ' + file);
+			}
+			next();
+		}
+	);
+}
+
+function getConfigEnvironment(file, environment, options, next) {
+	if(environment == ConfigLoadr.defaultEnvironment) {
+		environment = 'default';
+	}
+	var environmentFile = options.configDirectory + '/';
+	switch(options.environmentStoreType) {
+		case 'extension':
+			environmentFile += file + '.' + environment;
+			break;
+		case 'file':
+			environmentFile += file + '/' + environment;
+			break;
+		case 'directory':
+			environmentFile += environment + '/' + file;
+			break;
+		case 'object':
+			environmentFile += file;
+			break;
+		default:
+			throw new Error('unknown environmentStoreType: ' + options.environmentStoreType);
+	}
+	fs.readFile(environmentFile + '.json', {encoding: 'utf8'}, function(error, data) {
+		if (error) {
+			return next(error);
+		}
+		var configEnvironment = JSON.parse(data);
+		if(options.environmentStoreType == 'object') {
+			configEnvironment = configEnvironment[environment];
+			if (typeof configEnvironment == 'undefined') {
+				return next();
+			}
+		}
+		next(null, configEnvironment);
+	});
+}
+
+function updateObject(currentObject, newObject) {
+	Object.keys(newObject).forEach(function(key) {
+		if(typeof newObject[key] == 'object') {
+			if(typeof currentObject[key] == 'undefined') {
+				currentObject[key] = {};
+			}
+			return updateConfig(newObject[key], currentObject[key]);
+		}
+		currentObject[key] = newObject[key];
 	});
 }
 
