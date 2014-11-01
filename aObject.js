@@ -1,4 +1,4 @@
-aObject = {};
+var aObject = {};
 
 aObject.each = function(object, iterator, next) {
 	var length = Object.keys(object).length,
