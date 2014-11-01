@@ -8,21 +8,26 @@ ConfigLoadr.completeConfig = '$completeConfig';
 
 var defaultOptions = {
 	namespace: ConfigLoadr.globalNamespace,
-	environments: [ConfigLoadr.defaultEnvironment],
+	environments: ConfigLoadr.defaultEnvironment,
 	environmentStoreType: 'extension',
 	configDirectory: 'config',
-	saveOptions: 'true'
 };
 
-function ConfigLoadr(load, options_next, next) {
+function ConfigLoadr(load, options_next, next) { // underscore in argument is meant as slash, in following functions as well
 	var parsedArguments = parseArguments(options_next, next);
-	options = parsedArguments.options;
-	next = parsedArguments.callback;
-	if(options.saveOptions === true) {
+	var options = parsedArguments.options;
+	next = parsedArguments.cb;
+	if(typeof options.saveOptions == 'undefined' || options.saveOptions === true) {
 		this.options = options;
 	}
-	this.globalConfig = {};
-	this.configNamespaces = {};
+	if(typeof global.configLoadr == 'undefined') {
+		global.configLoadr = {
+			globalConfig: {},
+			configNamespaces: {}
+		};
+	}
+	this.globalConfig = global.configLoadr.globalConfig;
+	this.configNamespaces = global.configLoadr.configNamespaces;
 	var thisCL = this;
 	loadConfig(load,
 		{
@@ -41,11 +46,12 @@ function ConfigLoadr(load, options_next, next) {
 
 ConfigLoadr.prototype.load = function(load, options_next, next) {
 	var parsedArguments = parseArguments(options_next, next, this.options);
-	options = parsedArguments.options;
-	next = parsedArguments.callback;
+	var options = parsedArguments.options;
+	next = parsedArguments.cb;
 	if(options.saveOptions === true) {
 		this.options = options;
 	}
+	var thisCL = this;
 	loadConfig(load, {global: this.globalConfig, namespaces: this.configNamespaces}, options, function(error, config) {
 		next(null, {
 			global: thisCL.globalConfig,
@@ -60,19 +66,18 @@ ConfigLoadr.prototype.setOptions = function(options) {
 };
 
 ConfigLoadr.prototype.get = function(namespaces) {
-	if(typeof namespaces == 'undefined') {
-		returnObject = this.globalConfig;
-	} else {
+	var returnObject = this.globalConfig;
+	if(typeof namespaces != 'undefined') {
 		if(typeof namespaces == 'string') {
 			if(namespaces == ConfigLoadr.completeConfig) {
 				aObject.eachSync(this.configNamespaces, function(namespace, configNamespace) {
 					returnObject[key] = value;
 				});
 			} else {
-				returnObject[namespaces] = this.configNamespaces.namespace;
+				returnObject[namespaces] = this.configNamespaces[namespaces];
 			}
 		} else if(typeof namespaces == 'object') {
-			namespaces.forEach(function(key, namespace) {
+			namespaces.forEach(function(namespace, key) {
 				returnObject[namespace] = this.configNamespaces[namespace];
 			});
 		} else {
@@ -82,20 +87,21 @@ ConfigLoadr.prototype.get = function(namespaces) {
 	return returnObject;
 };
 
-function parseArguments(options_callback, callback_instanceOptions, instanceOptions) {
+function parseArguments(options_cb, cb_instanceOptions, instanceOptions) {
 	if(typeof instanceOptions == 'undefined') {
 		instanceOptions = defaultOptions;
 	}
-	if (typeof options_callback == 'function') {
-		callback = options_callback;
+	var cb, options;
+	if (typeof options_cb == 'function') {
+		cb = options_cb;
 		options = instanceOptions;
-	} else if (typeof options_callback == 'object') {
-		if(typeof callback_instanceOptions == 'object') {
-			instanceOptions = callback_instanceOptions;
+	} else if (typeof options_cb == 'object') {
+		if(typeof cb_instanceOptions == 'object') {
+			instanceOptions = cb_instanceOptions;
 		} else {
-			callback = callback_instanceOptions;
+			cb = cb_instanceOptions;
 		}
-		options = options_callback;
+		options = options_cb;
 		if(options.resetOptions === true) {
 			instanceOptions = defaultOptions;
 		}
@@ -105,13 +111,13 @@ function parseArguments(options_callback, callback_instanceOptions, instanceOpti
 			}
 		});
 	} else {
-		throw new TypeError('unsupported type of options / callback: ' + typeof options_callback);
+		throw new TypeError('unsupported type of options / cb: ' + typeof options_cb);
 	}
-	returnObject = {
+	var returnObject = {
 		options: options
 	};
-	if (typeof callback == 'function') {
-		returnObject.callback = callback;
+	if (typeof cb == 'function') {
+		returnObject.cb = cb;
 	}
 	return returnObject;
 }
@@ -164,6 +170,9 @@ function updateConfig(currentConfig, newConfig, namespace) {
 function getConfigFile(file, options, next) {
 	var noFileFound = true,
 		configFile = {};
+	if(typeof options.environments == 'string') {
+		options.environments = [options.environments];
+	}
 	async.each(options.environments,
 		function(environment, nextEnvironment) {
 			getConfigEnvironment(file, environment, options, function(error, configEnvironment) {
@@ -226,7 +235,7 @@ function updateObject(currentObject, newObject) {
 			if(typeof currentObject[key] == 'undefined') {
 				currentObject[key] = {};
 			}
-			return updateObject(newObject[key], currentObject[key]);
+			return updateObject(currentObject[key], newObject[key]);
 		}
 		currentObject[key] = newObject[key];
 	});
