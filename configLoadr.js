@@ -13,27 +13,61 @@ var defaultOptions = {
 };
 
 function ConfigLoadr(load, options_next, next) {
-	var sortedArguments = sortArguments(options_next, next);
-	this.options = sortedArguments.options;
-	next = sortedArguments.callback;
+	var parsedArguments = parseArguments(options_next, next);
+	options = parsedArguments.options;
+	next = parsedArguments.callback;
+	if(options.saveOptions === true) {
+		this.options = options;
+	}
 	this.globalConfig = {};
 	this.configNamespaces = {};
-	loadConfig(load, {global: this.globalConfig, namespaces: this.configNamespaces}, this.options);
+	var thisCL = this;
+	loadConfig(load,
+		{
+			global: this.globalConfig,
+			namespaces: this.configNamespaces
+		},
+		options,
+		function(error, config) {
+			next(null, {
+				global: thisCL.globalConfig,
+				namespaces: thisCL.configNamespaces
+			});
+		}
+	);
 }
 
-function sortArguments(options_callback, callback) {
+ConfigLoadr.prototype.load = function(load, options_next, next) {
+	var parsedArguments = parseArguments(options_next, next, this.options);
+	options = parsedArguments.options;
+	next = parsedArguments.callback;
+	if(options.saveOptions === true) {
+		this.options = options;
+	}
+	loadConfig(load, {global: this.globalConfig, namespaces: this.configNamespaces}, options, function(error, config) {
+		next();
+	});
+};
+
+function parseArguments(options_callback, callback, instanceOptions) {
+	if(typeof instanceOptions == 'undefined') {
+		instanceOptions = defaultOptions;
+	}
 	if (typeof options_callback == 'function') {
 		callback = options_callback;
-		options = defaultOptions;
+		options = instanceOptions;
 	} else if (typeof options_callback == 'object') {
 		options = options_callback;
-		aObject.eachSync(defaultOptions, function(key, value) {
+		if(options.resetOptions === true) {
+			instanceOptions = defaultOptions;
+		}
+		aObject.eachSync(instanceOptions, function(key, value) {
 			if(typeof options[key] == 'undefined') {
 				options[key] = value;
 			}
 		});
 	} else {
-		throw new Error('unsupported type of options / next: ' + typeof options_next);
+		throw new TypeError('unsupported type of options / next: ' + typeof options_next);
 	}
 	return {
 		options: options,
@@ -41,14 +75,14 @@ function sortArguments(options_callback, callback) {
 	};
 }
 
-function loadConfig(load, config, options) {
+function loadConfig(load, config, options, next) {
 	if(typeof load == 'string') {
 		load = [load];
 	}
 	if(typeof load == 'object') {
 		async.each(load,
 			function(file, nextFile) {
-				getConfigFile(file, options, function(configFile) {
+				getConfigFile(file, options, function(error, configFile) {
 					updateConfig(
 						{
 							global: config.global,
@@ -68,11 +102,12 @@ function loadConfig(load, config, options) {
 			}
 		);
 	} else {
-		throw new Error('unsupported type of load: ' + typeof load);
+		throw new TypeError('unsupported type of load: ' + typeof load);
 	}
 }
 
 function updateConfig(currentConfig, newConfig, namespace) {
+	console.log(namespace);
 	if(namespace == ConfigLoadr.globalNamespace) {
 		updateObject(currentConfig.global, newConfig);
 	} else {
@@ -85,15 +120,15 @@ function updateConfig(currentConfig, newConfig, namespace) {
 
 function getConfigFile(file, options, next) {
 	var noFileFound = true,
-		config = {};
+		configFile = {};
 	async.each(options.environments,
 		function(environment, nextEnvironment) {
-			getConfig(file, environment, options, function(error, configEnvironment) {
+			getConfigEnvironment(file, environment, options, function(error, configEnvironment) {
 				if(error) {
 					return nextEnvironment();
 				}
 				noFileFound = false;
-				updateObject(config, configEnvironment);
+				updateObject(configFile, configEnvironment);
 				nextEnvironment();
 			});
 		},
@@ -101,7 +136,7 @@ function getConfigFile(file, options, next) {
 			if(noFileFound) {
 				throw new Error('no environment files found for file: ' + file);
 			}
-			next();
+			next(null, configFile);
 		}
 	);
 }
