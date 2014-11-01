@@ -4,6 +4,7 @@ var fs = require('fs'),
 
 ConfigLoadr.globalNamespace = '$globalNamespace';
 ConfigLoadr.defaultEnvironment = '$defaultEnvironment';
+ConfigLoadr.completeConfig = '$completeConfig';
 
 var defaultOptions = {
 	namespace: ConfigLoadr.globalNamespace,
@@ -45,11 +46,42 @@ ConfigLoadr.prototype.load = function(load, options_next, next) {
 		this.options = options;
 	}
 	loadConfig(load, {global: this.globalConfig, namespaces: this.configNamespaces}, options, function(error, config) {
-		next();
+		next(null, {
+			global: thisCL.globalConfig,
+			namespaces: thisCL.configNamespaces
+		});
 	});
 };
 
-function parseArguments(options_callback, callback, instanceOptions) {
+ConfigLoadr.prototype.setOptions = function(options) {
+	var parsedArguments = parseArguments(options, this.options);
+	this.options = parsedArguments.options;
+};
+
+ConfigLoadr.prototype.get = function(namespaces) {
+	if(typeof namespaces == 'undefined') {
+		returnObject = this.globalConfig;
+	} else {
+		if(typeof namespaces == 'string') {
+			if(namespaces == ConfigLoadr.completeConfig) {
+				aObject.eachSync(this.configNamespaces, function(namespace, configNamespace) {
+					returnObject[key] = value;
+				});
+			} else {
+				returnObject[namespaces] = this.configNamespaces.namespace;
+			}
+		} else if(typeof namespaces == 'object') {
+			namespaces.forEach(function(key, namespace) {
+				returnObject[namespace] = this.configNamespaces[namespace];
+			});
+		} else {
+			throw new TypeError('unsupported type of namespaces');
+		}
+	}
+	return returnObject;
+};
+
+function parseArguments(options_callback, callback_instanceOptions, instanceOptions) {
 	if(typeof instanceOptions == 'undefined') {
 		instanceOptions = defaultOptions;
 	}
@@ -57,6 +89,11 @@ function parseArguments(options_callback, callback, instanceOptions) {
 		callback = options_callback;
 		options = instanceOptions;
 	} else if (typeof options_callback == 'object') {
+		if(typeof callback_instanceOptions == 'object') {
+			instanceOptions = callback_instanceOptions;
+		} else {
+			callback = callback_instanceOptions;
+		}
 		options = options_callback;
 		if(options.resetOptions === true) {
 			instanceOptions = defaultOptions;
@@ -67,12 +104,15 @@ function parseArguments(options_callback, callback, instanceOptions) {
 			}
 		});
 	} else {
-		throw new TypeError('unsupported type of options / next: ' + typeof options_next);
+		throw new TypeError('unsupported type of options / callback: ' + typeof options_callback);
 	}
-	return {
-		options: options,
-		callback: callback
+	returnObject = {
+		options: options
 	};
+	if (typeof callback == 'function') {
+		returnObject.callback = callback;
+	}
+	return returnObject;
 }
 
 function loadConfig(load, config, options, next) {
@@ -107,14 +147,16 @@ function loadConfig(load, config, options, next) {
 }
 
 function updateConfig(currentConfig, newConfig, namespace) {
-	console.log(namespace);
 	if(namespace == ConfigLoadr.globalNamespace) {
 		updateObject(currentConfig.global, newConfig);
 	} else {
+		if(namespace == 'global') {
+			throw new Error('namespace global is not allowed');
+		}
 		if(typeof currentConfig.namespaces[namespace] == 'undefined') {
 			currentConfig.namespaces[namespace] = {};
 		}
-		updateConfig(currentConfig.namespaces[namespace], newConfig);
+		updateObject(currentConfig.namespaces[namespace], newConfig);
 	}
 }
 
@@ -183,7 +225,7 @@ function updateObject(currentObject, newObject) {
 			if(typeof currentObject[key] == 'undefined') {
 				currentObject[key] = {};
 			}
-			return updateConfig(newObject[key], currentObject[key]);
+			return updateObject(newObject[key], currentObject[key]);
 		}
 		currentObject[key] = newObject[key];
 	});
