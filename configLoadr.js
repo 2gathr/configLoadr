@@ -10,7 +10,8 @@ var defaultOptions = {
 	namespace: ConfigLoadr.globalNamespace,
 	environments: [ConfigLoadr.defaultEnvironment],
 	environmentStoreType: 'extension',
-	configDirectory: 'config'
+	configDirectory: 'config',
+	saveOptions: 'true'
 };
 
 function ConfigLoadr(load, options_next, next) {
