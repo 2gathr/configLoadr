@@ -1,6 +1,6 @@
 var fs = require('fs'),
 	async = require('async'),
-	aObject = require('../aObject');
+	aObject = require('../aObject/aObject.js');
 
 ConfigLoadr.globalNamespace = '$globalNamespace';
 ConfigLoadr.defaultEnvironment = '$defaultEnvironment';
