@@ -44,4 +44,16 @@ aObject.eachSync = function(object, iterator) {
 	});
 };
 
+aObject.update = function(currentObject, newObject) {
+	Object.keys(newObject).forEach(function(key) {
+		if(typeof newObject[key] == 'object') {
+			if(typeof currentObject[key] == 'undefined') {
+				currentObject[key] = {};
+			}
+			return aObject.update(currentObject[key], newObject[key]);
+		}
+		currentObject[key] = newObject[key];
+	});
+};
+
 module.exports = aObject;

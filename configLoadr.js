@@ -155,7 +155,7 @@ function loadConfig(load, config, options, next) {
 
 function updateConfig(currentConfig, newConfig, namespace) {
 	if(namespace == ConfigLoadr.globalNamespace) {
-		updateObject(currentConfig.global, newConfig);
+		aObject.update(currentConfig.global, newConfig);
 	} else {
 		if(namespace == 'global') {
 			throw new Error('namespace global is not allowed');
@@ -163,7 +163,7 @@ function updateConfig(currentConfig, newConfig, namespace) {
 		if(typeof currentConfig.namespaces[namespace] == 'undefined') {
 			currentConfig.namespaces[namespace] = {};
 		}
-		updateObject(currentConfig.namespaces[namespace], newConfig);
+		aObject.update(currentConfig.namespaces[namespace], newConfig);
 	}
 }
 
@@ -180,7 +180,7 @@ function getConfigFile(file, options, next) {
 					return nextEnvironment();
 				}
 				noFileFound = false;
-				updateObject(configFile, configEnvironment);
+				aObject.update(configFile, configEnvironment);
 				nextEnvironment();
 			});
 		},
@@ -226,18 +226,6 @@ function getConfigEnvironment(file, environment, options, next) {
 			}
 		}
 		next(null, configEnvironment);
-	});
-}
-
-function updateObject(currentObject, newObject) {
-	Object.keys(newObject).forEach(function(key) {
-		if(typeof newObject[key] == 'object') {
-			if(typeof currentObject[key] == 'undefined') {
-				currentObject[key] = {};
-			}
-			return updateObject(currentObject[key], newObject[key]);
-		}
-		currentObject[key] = newObject[key];
 	});
 }
 
