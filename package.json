@@ -1,12 +1,11 @@
 {
 	"name": "config-loadr",
 	"version": "0.1.0",
-	"private": true,
 	"dependencies": {
 		"async": "~0.9.0",
 		"a-object": "~0.1.0"
 	},
-	"description": "configLoadr ===========",
+	"description": "A Node.js module for loading config files.",
 	"main": "configLoadr.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
