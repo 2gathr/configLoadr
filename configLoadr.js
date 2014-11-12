@@ -65,8 +65,11 @@ ConfigLoadr.prototype.setOptions = function(options) {
 	this.options = parsedArguments.options;
 };
 
-ConfigLoadr.prototype.get = function(namespaces) {
-	var returnObject = this.globalConfig;
+ConfigLoadr.prototype.get = function(namespaces, includeGlobalConfig) {
+	var returnObject = {};
+	if(includeGlobalConfig) {
+		returnObject = this.globalConfig;
+	}
 	if(typeof namespaces != 'undefined') {
 		if(typeof namespaces == 'string') {
 			if(namespaces == ConfigLoadr.completeConfig) {
