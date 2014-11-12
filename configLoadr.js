@@ -16,7 +16,7 @@ var defaultOptions = {
 function ConfigLoadr(load, options_next, next) { // underscore in argument is meant as slash, in following functions as well
 	var parsedArguments = parseArguments(options_next, next);
 	var options = parsedArguments.options;
-	next = parsedArguments.cb;
+	next = parsedArguments.callback;
 	if(typeof options.saveOptions == 'undefined' || options.saveOptions === true) {
 		this.options = options;
 	}
@@ -47,7 +47,7 @@ function ConfigLoadr(load, options_next, next) { // underscore in argument is me
 ConfigLoadr.prototype.load = function(load, options_next, next) {
 	var parsedArguments = parseArguments(options_next, next, this.options);
 	var options = parsedArguments.options;
-	next = parsedArguments.cb;
+	next = parsedArguments.callback;
 	if(options.saveOptions === true) {
 		this.options = options;
 	}
@@ -65,8 +65,11 @@ ConfigLoadr.prototype.setOptions = function(options) {
 	this.options = parsedArguments.options;
 };
 
-ConfigLoadr.prototype.get = function(namespaces) {
-	var returnObject = this.globalConfig;
+ConfigLoadr.prototype.get = function(namespaces, includeGlobalConfig) {
+	var returnObject = {};
+	if(includeGlobalConfig) {
+		returnObject = this.globalConfig;
+	}
 	if(typeof namespaces != 'undefined') {
 		if(typeof namespaces == 'string') {
 			if(namespaces == ConfigLoadr.completeConfig) {
@@ -87,21 +90,21 @@ ConfigLoadr.prototype.get = function(namespaces) {
 	return returnObject;
 };
 
-function parseArguments(options_cb, cb_instanceOptions, instanceOptions) {
+function parseArguments(options_callback, callback_instanceOptions, instanceOptions) {
 	if(typeof instanceOptions == 'undefined') {
 		instanceOptions = defaultOptions;
 	}
-	var cb, options;
-	if (typeof options_cb == 'function') {
-		cb = options_cb;
+	var callback, options;
+	if (typeof options_callback == 'function') {
+		callback = options_callback;
 		options = instanceOptions;
-	} else if (typeof options_cb == 'object') {
-		if(typeof cb_instanceOptions == 'object') {
-			instanceOptions = cb_instanceOptions;
+	} else if (typeof options_callback == 'object') {
+		if(typeof callback_instanceOptions == 'object') {
+			instanceOptions = callback_instanceOptions;
 		} else {
-			cb = cb_instanceOptions;
+			callback = callback_instanceOptions;
 		}
-		options = options_cb;
+		options = options_callback;
 		if(options.resetOptions === true) {
 			instanceOptions = defaultOptions;
 		}
@@ -111,13 +114,13 @@ function parseArguments(options_cb, cb_instanceOptions, instanceOptions) {
 			}
 		});
 	} else {
-		throw new TypeError('unsupported type of options / cb: ' + typeof options_cb);
+		throw new TypeError('unsupported type of options / callback: ' + typeof options_callback);
 	}
 	var returnObject = {
 		options: options
 	};
-	if (typeof cb == 'function') {
-		returnObject.cb = cb;
+	if (typeof callback == 'function') {
+		returnObject.callback = callback;
 	}
 	return returnObject;
 }
