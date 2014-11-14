@@ -1,6 +1,7 @@
 var fs = require('fs'),
 	async = require('async'),
-	aObject = require('a-object');
+	aObject = require('a-object'),
+	path = require('path');
 
 ConfigLoadr.globalNamespace = '$globalNamespace';
 ConfigLoadr.defaultEnvironment = '$defaultEnvironment';
@@ -11,12 +12,14 @@ var defaultOptions = {
 	environments: ConfigLoadr.defaultEnvironment,
 	environmentStoreType: 'extension',
 	configDirectory: 'config',
+	base: path.dirname(require.main.filename)
 };
 
-function ConfigLoadr(load, options_next, next) { // underscore in argument is meant as slash, in following functions as well
-	var parsedArguments = parseArguments(options_next, next);
-	var options = parsedArguments.options;
-	next = parsedArguments.callback;
+function ConfigLoadr() {
+	var parsedArguments = parseArguments(arguments),
+		load = parsedArguments.load,
+		options = parsedArguments.options,
+		next = parsedArguments.callback;
 	if(typeof options.saveOptions == 'undefined' || options.saveOptions === true) {
 		this.options = options;
 	}
@@ -44,10 +47,11 @@ function ConfigLoadr(load, options_next, next) { // underscore in argument is me
 	);
 }
 
-ConfigLoadr.prototype.load = function(load, options_next, next) {
-	var parsedArguments = parseArguments(options_next, next, this.options);
-	var options = parsedArguments.options;
-	next = parsedArguments.callback;
+ConfigLoadr.prototype.load = function() {
+	var parsedArguments = parseArguments(arguments, this.options),
+		load = parsedArguments.load,
+		options = parsedArguments.options,
+		next = parsedArguments.callback;
 	if(options.saveOptions === true) {
 		this.options = options;
 	}
@@ -67,7 +71,7 @@ ConfigLoadr.prototype.setOptions = function(options) {
 
 ConfigLoadr.prototype.get = function(namespaces, includeGlobalConfig) {
 	var returnObject = {};
-	if(includeGlobalConfig) {
+	if(typeof includeGlobalConfig == 'undefined' || includeGlobalConfig) {
 		returnObject = this.globalConfig;
 	}
 	if(typeof namespaces != 'undefined') {
@@ -90,39 +94,39 @@ ConfigLoadr.prototype.get = function(namespaces, includeGlobalConfig) {
 	return returnObject;
 };
 
-function parseArguments(options_callback, callback_instanceOptions, instanceOptions) {
+function parseArguments(givenArguments, instanceOptions) {
+	if(givenArguments.length > 3) {
+		return new Error('too many arguments given');
+	}
 	if(typeof instanceOptions == 'undefined') {
 		instanceOptions = defaultOptions;
 	}
-	var callback, options;
-	if (typeof options_callback == 'function') {
-		callback = options_callback;
-		options = instanceOptions;
-	} else if (typeof options_callback == 'object') {
-		if(typeof callback_instanceOptions == 'object') {
-			instanceOptions = callback_instanceOptions;
-		} else {
-			callback = callback_instanceOptions;
-		}
-		options = options_callback;
-		if(options.resetOptions === true) {
-			instanceOptions = defaultOptions;
-		}
-		aObject.eachSync(instanceOptions, function(key, value) {
-			if(typeof options[key] == 'undefined') {
-				options[key] = value;
-			}
-		});
-	} else {
-		throw new TypeError('unsupported type of options / callback: ' + typeof options_callback);
-	}
-	var returnObject = {
-		options: options
+	var parsedArguments = {
+		load: [],
+		options: instanceOptions,
+		callback: function() {}
 	};
-	if (typeof callback == 'function') {
-		returnObject.callback = callback;
-	}
-	return returnObject;
+	aObject.eachSync(givenArguments, function(keyArgument, argument) {
+		switch(typeof argument) {
+			case 'function':
+				parsedArguments.callback = argument;
+				break;
+			case 'object':
+				if(Array.isArray(argument)) {
+					parsedArguments.load = argument;
+				} else {
+					aObject.eachSync(parsedArguments.options, function(keyOption, value) {
+						if(typeof argument[keyOption] != 'undefined') {
+							parsedArguments.options[keyOption] = argument[keyOption];
+						}
+					});
+				}
+				break;
+			case 'string':
+				parsedArguments.load = argument;
+		}
+	});
+	return parsedArguments;
 }
 
 function loadConfig(load, config, options, next) {
@@ -200,7 +204,7 @@ function getConfigEnvironment(file, environment, options, next) {
 	if(environment == ConfigLoadr.defaultEnvironment) {
 		environment = 'default';
 	}
-	var environmentFile = options.configDirectory + '/';
+	var environmentFile = options.base + '/' + options.configDirectory + '/';
 	switch(options.environmentStoreType) {
 		case 'extension':
 			environmentFile += file + '.' + environment;
@@ -215,7 +219,7 @@ function getConfigEnvironment(file, environment, options, next) {
 			environmentFile += file;
 			break;
 		default:
-			throw new Error('unknown environmentStoreType: ' + options.environmentStoreType);
+			throw Error('unknown environmentStoreType: ' + options.environmentStoreType);
 	}
 	fs.readFile(environmentFile + '.json', {encoding: 'utf8'}, function(error, data) {
 		if (error) {
