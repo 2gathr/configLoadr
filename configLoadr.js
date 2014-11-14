@@ -19,7 +19,8 @@ function ConfigLoadr() {
 	var parsedArguments = parseArguments(arguments),
 		load = parsedArguments.load,
 		options = parsedArguments.options,
-		next = parsedArguments.callback;
+		next = parsedArguments.callback,
+		thisCL = this;
 	if(typeof options.saveOptions == 'undefined' || options.saveOptions === true) {
 		this.options = options;
 	}
@@ -31,7 +32,6 @@ function ConfigLoadr() {
 	}
 	this.globalConfig = global.configLoadr.globalConfig;
 	this.configNamespaces = global.configLoadr.configNamespaces;
-	var thisCL = this;
 	loadConfig(load,
 		{
 			global: this.globalConfig,
@@ -64,7 +64,7 @@ ConfigLoadr.prototype.load = function() {
 	});
 };
 
-ConfigLoadr.prototype.setOptions = function(options) {
+ConfigLoadr.prototype.setOptions = function() {
 	var parsedArguments = parseArguments(options, this.options);
 	this.options = parsedArguments.options;
 };
@@ -123,16 +123,13 @@ function parseArguments(givenArguments, instanceOptions) {
 				}
 				break;
 			case 'string':
-				parsedArguments.load = argument;
+				parsedArguments.load = [argument];
 		}
 	});
 	return parsedArguments;
 }
 
 function loadConfig(load, config, options, next) {
-	if(typeof load == 'string') {
-		load = [load];
-	}
 	if(typeof load == 'object') {
 		async.each(load,
 			function(file, nextFile) {
