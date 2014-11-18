@@ -12,7 +12,7 @@ var ConfigLoadr = require('config-loadr');
 ```
 
 ## Fucntions
-### new ConfigLoadr()
+### ConfigLoadr()
 ```node
 var configLoadr = new ConfigLoadr(mixed files, function next);
 var configLoadr = new ConfigLoadr(mixed files, object options, fucntion next);
