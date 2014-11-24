@@ -65,7 +65,7 @@ ConfigLoadr.prototype.load = function() {
 };
 
 ConfigLoadr.prototype.setOptions = function() {
-	var parsedArguments = parseArguments(options, this.options);
+	var parsedArguments = parseArguments(arguments, this.options);
 	this.options = parsedArguments.options;
 };
 
