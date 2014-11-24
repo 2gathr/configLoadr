@@ -98,7 +98,7 @@ function parseArguments(givenArguments, instanceOptions) {
 	if(givenArguments.length > 3) {
 		return new Error('too many arguments given');
 	}
-	if(typeof instanceOptions == 'undefined') {
+	if(typeof instanceOptions == 'undefined' || instanceOptions.resetOptions === true) {
 		instanceOptions = defaultOptions;
 	}
 	var parsedArguments = {
