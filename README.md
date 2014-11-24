@@ -30,7 +30,7 @@ Creates a new instance of ConfigLoadr and loads all config files in `load` with 
 		- `object` - Environments are the top objects in the config file *name*.json.
 	- string `base` - The base directory of the node application, which should be the directory where your *app.js* is placed. Default: `require.main.filename`, which will only work if you don't run your app through another app like pm2, mocha or forever (See http://nodejs.org/api/modules.html#modules_accessing_the_main_module).
 	- string `configDirectory` - The directory name where config files are stored. Therefore, your config files must be placed in *base*/*config*. Default: `config`.
-	- boolean `saveOptions` - Whether the given options should be stored as instance options. Default: `true`.
+	- boolean `saveOptions` - Whether the given options should be stored as instance options. This options won't be stored as an instance option. Default: `true`.
 - function `next` - A function to be called when all config files are loaded, the function is called with the 2 arguments listed below.
 	- `error` - If an error happens, `error` contains a description of the error. Not functional yet.
 	- object `config` - An object with the config loaded. It contains the key `global`, which is the config loaded into global namespace (config.global.*option*), and the key `namespaces`, where all namespace config is stored (config.*namespace*.*option*).
@@ -72,15 +72,15 @@ Loads all config files in `load` with optional `options`, when all files are loa
 	- `object` - Environments are the top objects in the config file *name*.json.
 	- string `base` - The base directory of the node application, which should be the directory where your *app.js* is placed. Default: `require.main.filename`, which will only work if you don't run your app through another app like pm2, mocha or forever (See http://nodejs.org/api/modules.html#modules_accessing_the_main_module).
 	- string `configDirectory` - The directory name where config files are stored. Therefore, your config files must be placed in *base*/*config*. Default: `config`.
-	- boolean `saveOptions` - Whether the given options should be stored as instance options. Default: `true`.
-	- boolean `resetOptions` - Whether instance options (`false`) or the default options (`true`) should be used. Default: `false`.
+	- boolean `saveOptions` - Whether the given options should be stored as instance options. This option itself won't be stored as an instance option. Default: `true`.
+	- boolean `resetOptions` - Whether instance options (`false`) or the default options (`true`) should be used as default values. This option  won't be stored as an instance option. Default: `false`.
 - function `next` - A function to be called when all config files are loaded, the function is called with 2 arguments listed below.
 	- `error` - If an error happens, `error` contains a description of the error. Not functional yet.
 	- object `config` - An object with the config loaded. It contains the key `global`, which is the config loaded into global namespace (config.global.*option*), and the key `namespaces`, where all namespace config is stored (config.*namespace*.*option*).
 
 #### Example
 ```node
-// loads config/analytics.production.json, config/analytics.test2.json, config/client.production.json and config/client.test2.json into namespace extra, default options instead of instance options are used but not saved
+// loads config/analytics.production.json, config/analytics.test2.json, config/client.production.json and config/client.test2.json into namespace extra, default options instead of instance options are used as default values, the options aren't saved as instance options
 configLoadr.load(
 	[
 		'analytics',
@@ -103,8 +103,42 @@ configLoadr.load(
 ```node
 configLoadr.setOptions(object options);
 ```
+Sets the given `options` as instance options.
+
+#### Arguments
+- object `options` - An object with the options to be stored as instance options. Options not stored as instance options are listed below
+	- boolean `resetOptions` - Whether instance options (`false`) or the default options (`true`) should be used as default values.
+
+#### Example
+```node
+// use default options instead of instance options as default values and save the options as instance options
+configLoadr.setOptions(
+	[
+		namespace: 'permissions',
+		environments: 'production',
+		resetOptions: true
+	]
+);
+```
 
 ### ConfigLoadr#get()
 ```node
-configLoadr.get(mixed namespaces, bool includeGlobalConfig);
+configLoadr.get(mixed namespaces[, boolean includeGlobalConfig]);
+```
+Gets the config of the given `namespaces`. Defaultly, global config is returned as well.
+
+#### Arguments
+- mixed `namespaces` - An array with namespaces or a string with one namespace to get the config of. The namespace config is stored in different namespace objects (like config.*namespace*.*option*).
+- boolean `includeGlobalConfig` - Wether to include global config as well. Global config will be added into the top level of the object (like config.*option*). Default: `true`.
+
+#### Example
+```node
+// will get namespace "extra" & global config
+configLoadr.get([
+	'extra'
+]);
+// will only get namespace "permissions" options.
+configLoadr.get([
+	['permissions']
+]);
 ```
