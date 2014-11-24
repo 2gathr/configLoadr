@@ -30,8 +30,7 @@ Creates a new instance of ConfigLoadr and loads `files` with optional `options`,
 		- `object` - Environments are the top objects in the config file *name*.json.
 	- string `base` - The base directory of the node application, which should be the directory where your *app.js* is placed.
 	- string `configDirectory` - The directory name where config files are stored. Therefore, your config files must be placed in *base*/*config*. Default: `config`.
-	- boolean `saveOptions` - Whether the given options should be stored as instance options. Only affects `ConfigLoadr()` and `ConfigLoadr#load()`. Default: `true`.
-	- boolean `resetOptions` - Whether instance options (`false`) or the default options (`true`) should be used. Only affects `ConfigLoadr#load()`. Default: `false`.
+	- boolean `saveOptions` - Whether the given options should be stored as instance options. Default: `true`.
 - function `next` - A function to be called after all config files are loaded.
 
 #### Example
