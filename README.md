@@ -123,7 +123,7 @@ configLoadr.setOptions(
 
 ### ConfigLoadr#get()
 ```node
-configLoadr.get(mixed namespaces[, boolean includeGlobalConfig]);
+configLoadr.get([mixed namespaces[, boolean includeGlobalConfig]]);
 ```
 Gets the config of the given `namespaces`. Defaultly, global config is returned as well.
 
