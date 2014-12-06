@@ -74,6 +74,7 @@ Loads all config files in `load` with optional `options`, when all files are loa
 	- string `configDirectory` - The directory name where config files are stored. Therefore, your config files must be placed in *base*/*config*. Default: `config`.
 	- boolean `saveOptions` - Whether the given options should be stored as instance options. This option itself won't be stored as an instance option. Default: `true`.
 	- boolean `resetOptions` - Whether instance options (`false`) or the default options (`true`) should be used as default values. This option  won't be stored as an instance option. Default: `false`.
+	- boolean `syncConfig` - Whether config should be synced globally. If set to `true`, the config will be synced between all instances having `syncConfig` enabled as well. Default: `true`.
 - function `next` - A function to be called when all config files are loaded, the function is called with 2 arguments listed below.
 	- `error` - If an error happens, `error` contains a description of the error. Not functional yet.
 	- object `config` - An object with the config loaded. It contains the key `global`, which is the config loaded into global namespace (config.global.*option*), and the key `namespaces`, where all namespace config is stored (config.*namespace*.*option*).

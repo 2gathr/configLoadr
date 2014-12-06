@@ -20,18 +20,22 @@ function ConfigLoadr() {
 		load = parsedArguments.load,
 		options = parsedArguments.options,
 		next = parsedArguments.callback,
-		thisCL = this;
+		_this = this;
 	if(typeof options.saveOptions == 'undefined' || options.saveOptions === true) {
 		this.options = options;
 	}
-	if(typeof global.configLoadr == 'undefined') {
-		global.configLoadr = {
-			globalConfig: {},
-			configNamespaces: {}
-		};
+	this.globalConfig = {};
+	this.configNamespaces = {};
+	if(typeof options.syncConfig == 'undefined' || options.syncConfig === true) {
+		if(typeof global.configLoadr == 'undefined') {
+			global.configLoadr = {
+				globalConfig: {},
+				configNamespaces: {}
+			};
+		}
+		this.globalConfig = global.configLoadr.globalConfig;
+		this.configNamespaces = global.configLoadr.configNamespaces;
 	}
-	this.globalConfig = global.configLoadr.globalConfig;
-	this.configNamespaces = global.configLoadr.configNamespaces;
 	loadConfig(load,
 		{
 			global: this.globalConfig,
@@ -40,8 +44,8 @@ function ConfigLoadr() {
 		options,
 		function(error, config) {
 			next(null, {
-				global: thisCL.globalConfig,
-				namespaces: thisCL.configNamespaces
+				global: _this.globalConfig,
+				namespaces: _this.configNamespaces
 			});
 		}
 	);
@@ -55,11 +59,11 @@ ConfigLoadr.prototype.load = function() {
 	if(options.saveOptions === true) {
 		this.options = options;
 	}
-	var thisCL = this;
+	var _this = this;
 	loadConfig(load, {global: this.globalConfig, namespaces: this.configNamespaces}, options, function(error, config) {
 		next(null, {
-			global: thisCL.globalConfig,
-			namespaces: thisCL.configNamespaces
+			global: _this.globalConfig,
+			namespaces: _this.configNamespaces
 		});
 	});
 };
