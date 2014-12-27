@@ -1,9 +1,9 @@
 {
   "name": "config-loadr",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "dependencies": {
     "async": "^0.9.0",
-    "object-analyzr": "^2.1.0"
+    "object-analyzr": "^3.0.0"
   },
   "description": "A Node.js module for loading config files.",
   "main": "configLoadr.js",
