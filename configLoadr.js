@@ -81,11 +81,11 @@ ConfigLoadr.prototype.get = function(namespaces, includeGlobalConfig) {
 					returnObject[key] = value;
 				});
 			} else returnObject[namespaces] = this.configNamespaces[namespaces];
-		} else if(typeof namespaces == 'object') {
+		} else {
 			namespaces.forEach(function(namespace, key) {
 				returnObject[namespace] = this.configNamespaces[namespace];
 			});
-		} else throw new TypeError('unsupported type of namespaces');
+		}
 	}
 	return returnObject;
 };
@@ -119,39 +119,35 @@ function parseArguments(givenArguments, instanceOptions) {
 }
 
 function loadConfig(load, config, options, next) {
-	if(typeof load == 'object') {
-		async.each(load,
-			function(file, nextFile) {
-				getConfigFile(file, options, function(err, configFile) {
-					if(err) return nextFile(err);
-					updateConfig(
-						{
-							global: config.global,
-							namespaces: config.namespaces
-						},
-						configFile,
-						options.namespace
-					);
-					nextFile();
-				});
-			},
-			function(err) {
-				if(err) return next(err);
-				next(null, {
-					global: config.global,
-					namespaces: config.namespaces
-				});
-			}
-		);
-	} else {
-		throw new TypeError('unsupported type of load: ' + typeof load);
-	}
+	async.each(load,
+		function(file, nextFile) {
+			getConfigFile(file, options, function(err, configFile) {
+				if(err) return nextFile(err);
+				updateConfig(
+					{
+						global: config.global,
+						namespaces: config.namespaces
+					},
+					configFile,
+					options.namespace
+				);
+				nextFile();
+			});
+		},
+		function(err) {
+			if(err) return next(err);
+			next(null, {
+				global: config.global,
+				namespaces: config.namespaces
+			});
+		}
+	);
 }
 
 function updateConfig(currentConfig, newConfig, namespace) {
 	if(namespace == ConfigLoadr.globalNamespace) aObject.update(currentConfig.global, newConfig);
 	else {
-		if(namespace == 'global') throw new Error('namespace global is not allowed');
+		if(namespace == 'global') return next(new Error('namespace global is not allowed'));
 		if(typeof currentConfig.namespaces[namespace] == 'undefined') currentConfig.namespaces[namespace] = {};
 		aObject.update(currentConfig.namespaces[namespace], newConfig);
 	}
