@@ -28,7 +28,7 @@ Creates a new instance of ConfigLoadr and loads all config files in `load` with 
 		- `file` - Config files are loaded as *name*/*environment*.json.
 		- `directory` - Config files are loaded as *environment*/*name*.json.
 		- `object` - Environments are the top objects in the config file *name*.json.
-	- string `base` - The base directory of the node application, which should be the directory where your *app.js* is placed. Default: `require.main.filename`, which will only work if you don't run your app through another app like pm2, mocha or forever (See http://nodejs.org/api/modules.html#modules_accessing_the_main_module).
+	- string `base` - The base directory of the node application, which should be the directory where your *app.js* is placed. Default: Directory name of `require.main.filename` (parsed by `require('path').dirname()`), which will only work if you don't run your app through another app like pm2, mocha or forever (See http://nodejs.org/api/modules.html#modules_accessing_the_main_module).
 	- string `configDirectory` - The directory name where config files are stored. Therefore, your config files must be placed in *base*/*config*. Default: `config`.
 	- boolean `saveOptions` - Whether the given options should be stored as instance options. This options won't be stored as an instance option. Default: `true`.
 	- boolean `syncConfig` - Whether config should be synced globally. If set to `true`, the config will be synced between all instances having `syncConfig` enabled as well. Default: `true`.
