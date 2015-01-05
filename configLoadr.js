@@ -77,7 +77,7 @@ ConfigLoadr.prototype.get = function(namespaces, includeGlobalConfig) {
 	if(typeof namespaces != 'undefined') {
 		if(typeof namespaces == 'string') {
 			if(namespaces == ConfigLoadr.completeConfig) {
-				aObject.eachSync(this.configNamespaces, function(namespace, configNamespace) {
+				objectAnalyzr.eachSync(this.configNamespaces, function(namespace, configNamespace) {
 					returnObject[key] = value;
 				});
 			} else returnObject[namespaces] = this.configNamespaces[namespaces];
@@ -98,7 +98,7 @@ function parseArguments(givenArguments, instanceOptions) {
 		options: instanceOptions,
 		callback: function() {}
 	};
-	aObject.eachSync(givenArguments, function(keyArgument, argument) {
+	objectAnalyzr.eachSync(givenArguments, function(keyArgument, argument) {
 		switch(typeof argument) {
 			case 'function':
 				parsedArguments.callback = argument;
@@ -106,7 +106,7 @@ function parseArguments(givenArguments, instanceOptions) {
 			case 'object':
 				if(Array.isArray(argument)) parsedArguments.load = argument;
 				else {
-					aObject.eachSync(parsedArguments.options, function(keyOption, value) {
+					objectAnalyzr.eachSync(parsedArguments.options, function(keyOption, value) {
 						if(typeof argument[keyOption] != 'undefined') parsedArguments.options[keyOption] = argument[keyOption];
 					});
 				}
@@ -145,11 +145,11 @@ function loadConfig(load, config, options, next) {
 }
 
 function updateConfig(currentConfig, newConfig, namespace) {
-	if(namespace == ConfigLoadr.globalNamespace) aObject.update(currentConfig.global, newConfig);
+	if(namespace == ConfigLoadr.globalNamespace) objectAnalyzr.update(currentConfig.global, newConfig);
 	else {
 		if(namespace == 'global') return next(new Error('namespace global is not allowed'));
 		if(typeof currentConfig.namespaces[namespace] == 'undefined') currentConfig.namespaces[namespace] = {};
-		aObject.update(currentConfig.namespaces[namespace], newConfig);
+		objectAnalyzr.update(currentConfig.namespaces[namespace], newConfig);
 	}
 }
 
@@ -162,7 +162,7 @@ function getConfigFile(file, options, next) {
 			getConfigEnvironment(file, environment, options, function(err, configEnvironment) {
 				if(err) return nextEnvironment(err);
 				noFileFound = false;
-				aObject.update(configFile, configEnvironment);
+				objectAnalyzr.update(configFile, configEnvironment);
 				nextEnvironment();
 			});
 		},
