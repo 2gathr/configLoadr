@@ -134,12 +134,11 @@ Gets the config of the given `namespaces`. Defaultly, global config is returned 
 
 #### Example
 ```node
-// will get namespace "extra" & global config
+// will get namespace "extra", "app" & global config
 configLoadr.get([
-	'extra'
+	'extra',
+	'app'
 ]);
 // will only get namespace "permissions" options.
-configLoadr.get([
-	['permissions']
-]);
+configLoadr.get('permissions', false);
 ```
