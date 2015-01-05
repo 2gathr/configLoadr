@@ -41,8 +41,7 @@ function ConfigLoadr() {
 		},
 		options,
 		function(err, config) {
-			if(err) return next(err);
-			next(null, {
+			next(err, {
 				global: _this.globalConfig,
 				namespaces: _this.configNamespaces
 			});
@@ -58,8 +57,7 @@ ConfigLoadr.prototype.load = function() {
 	if(options.saveOptions === true) this.options = options;
 	var _this = this;
 	loadConfig(load, {global: this.globalConfig, namespaces: this.configNamespaces}, options, function(err, config) {
-		if(err) return next(err);
-		next(null, {
+		next(err, {
 			global: _this.globalConfig,
 			namespaces: _this.configNamespaces
 		});
@@ -135,8 +133,7 @@ function loadConfig(load, config, options, next) {
 			});
 		},
 		function(err) {
-			if(err) return next(err);
-			next(null, {
+			next(err, {
 				global: config.global,
 				namespaces: config.namespaces
 			});
@@ -168,8 +165,7 @@ function getConfigFile(file, options, next) {
 		},
 		function(err) {
 			if(noFileFound) return next(new Error('no environment files found for file: ' + file));
-			if(err) return next(err);
-			next(null, configFile);
+			next(err, configFile);
 		}
 	);
 }
