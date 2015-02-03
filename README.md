@@ -5,7 +5,7 @@ A Node.js module for loading config files
 
 ## Usage
 ```sh
-npm install config-loadr
+npm install config-loadr --save
 ```
 ```node
 var ConfigLoadr = require('config-loadr');
