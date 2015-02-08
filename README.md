@@ -34,7 +34,7 @@ Creates a new instance of ConfigLoadr and loads all config files in `load` with 
 	- boolean `syncConfig` - Whether config should be synced globally. If set to `true`, the config will be synced between all instances having `syncConfig` enabled as well. Default: `true`.
 - function `next` - A function to be called when all config files are loaded, the function is called with the 2 arguments listed below.
 	- `error` - If an error happens, `error` contains a description of the error. Not functional yet.
-	- object `config` - An object with the config loaded. It contains the key `global`, which is the config loaded into global namespace (config.global.*option*), and the key `namespaces`, where all namespace config is stored (config.*namespace*.*option*).
+	- object `config` - An object with the config loaded. It contains the key `global`, which is the config loaded into global namespace (config.global.*option*), and the key `namespaces`, where all namespace config is stored (config.namespaces.*namespace*.*option*).
 
 #### Example
 ```node
@@ -77,7 +77,7 @@ Loads all config files in `load` with optional `options`, when all files are loa
 	- boolean `resetOptions` - Whether instance options (`false`) or the default options (`true`) should be used as default values. This option  won't be stored as an instance option. Default: `false`.
 - function `next` - A function to be called when all config files are loaded, the function is called with 2 arguments listed below.
 	- `error` - If an error happens, `error` contains a description of the error. Not functional yet.
-	- object `config` - An object with the config loaded. It contains the key `global`, which is the config loaded into global namespace (config.global.*option*), and the key `namespaces`, where all namespace config is stored (config.*namespace*.*option*).
+	- object `config` - An object with the config loaded. It contains the key `global`, which is the config loaded into global namespace (config.global.*option*), and the key `namespaces`, where all namespace config is stored (config.namespaces.*namespace*.*option*).
 
 #### Example
 ```node
