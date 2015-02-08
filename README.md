@@ -5,15 +5,15 @@ A Node.js module for loading config files
 
 ## Usage
 ```sh
-npm install config-loadr
+npm install config-loadr --save
 ```
-```node
+```js
 var ConfigLoadr = require('config-loadr');
 ```
 
 ## Functions
 ### ConfigLoadr()
-```node
+```js
 var configLoadr = new ConfigLoadr([mixed load[, object options][, function next]]);
 ```
 Creates a new instance of ConfigLoadr and loads all config files in `load` with optional `options`, when all files are loaded, `next` is called.
@@ -37,7 +37,7 @@ Creates a new instance of ConfigLoadr and loads all config files in `load` with 
 	- object `config` - An object with the config loaded. It contains the key `global`, which is the config loaded into global namespace (config.global.*option*), and the key `namespaces`, where all namespace config is stored (config.namespaces.*namespace*.*option*).
 
 #### Example
-```node
+```js
 // loads config/main/development.json, config/main/production.json, config/database/development.json and config/database/production.json into global namespace
 var configLoadr = new ConfigLoadr(
 	[
@@ -56,7 +56,7 @@ var configLoadr = new ConfigLoadr(
 ```
 
 ### ConfigLoadr#load()
-```node
+```js
 configLoadr.load(mixed load[, object options][, function next]);
 ```
 Loads all config files in `load` with optional `options`, when all files are loaded, `next` is called.
@@ -80,7 +80,7 @@ Loads all config files in `load` with optional `options`, when all files are loa
 	- object `config` - An object with the config loaded. It contains the key `global`, which is the config loaded into global namespace (config.global.*option*), and the key `namespaces`, where all namespace config is stored (config.namespaces.*namespace*.*option*).
 
 #### Example
-```node
+```js
 // loads config/analytics.production.json, config/analytics.test2.json, config/client.production.json and config/client.test2.json into namespace extra, default options instead of instance options are used as default values, the options aren't saved as instance options
 configLoadr.load(
 	[
@@ -101,7 +101,7 @@ configLoadr.load(
 ```
 
 ### ConfigLoadr#setOptions()
-```node
+```js
 configLoadr.setOptions(object options);
 ```
 Sets the given `options` as instance options.
@@ -111,7 +111,7 @@ Sets the given `options` as instance options.
 	- boolean `resetOptions` - Whether instance options (`false`) or the default options (`true`) should be used as default values.
 
 #### Example
-```node
+```js
 // use default options instead of instance options as default values and save the options as instance options
 configLoadr.setOptions(
 	[
@@ -123,7 +123,7 @@ configLoadr.setOptions(
 ```
 
 ### ConfigLoadr#get()
-```node
+```js
 configLoadr.get([mixed namespaces[, boolean includeGlobalConfig]]);
 ```
 Gets the config of the given `namespaces`. Defaultly, global config is returned as well.
@@ -133,7 +133,7 @@ Gets the config of the given `namespaces`. Defaultly, global config is returned 
 - boolean `includeGlobalConfig` - Wether to include global config as well. Global config will be added into the top level of the object (like config.*option*). Default: `true`.
 
 #### Example
-```node
+```js
 // will get namespace "extra", "app" & global config
 configLoadr.get([
 	'extra',
